@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+:root {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-display: "Fraunces", Georgia, serif;
+  --radius: 0.75rem;
+
+  --background: oklch(96.2% 0.011 84.6);
+  --foreground: oklch(24.3% 0.007 145.4);
+  --card: oklch(98.8% 0.005 90);
+  --card-foreground: oklch(24.3% 0.007 145.4);
+  --popover: oklch(98.8% 0.005 90);
+  --popover-foreground: oklch(24.3% 0.007 145.4);
+  --primary: oklch(39.1% 0.033 143.3);
+  --primary-foreground: oklch(96.2% 0.011 84.6);
+  --secondary: oklch(91.8% 0.02 110);
+  --secondary-foreground: oklch(33% 0.03 140);
+  --muted: oklch(93.5% 0.012 88);
+  --muted-foreground: oklch(47.2% 0.02 120);
+  --accent: oklch(65.9% 0.108 43.4);
+  --accent-foreground: oklch(98.5% 0.005 90);
+  --destructive: oklch(54.6% 0.144 28.5);
+  --destructive-foreground: oklch(98.5% 0.005 90);
+  --border: oklch(88.5% 0.015 88);
+  --input: oklch(88.5% 0.015 88);
+  --ring: oklch(65.9% 0.108 43.4);
+
+  --status-leve: oklch(58.8% 0.085 144.4);
+  --status-leve-strong: oklch(43% 0.08 144);
+  --status-moderada: oklch(68.1% 0.13 72.4);
+  --status-moderada-strong: oklch(50% 0.11 70);
+  --status-alta: oklch(54.6% 0.144 28.5);
+  --status-alta-strong: oklch(44% 0.14 28);
+  --status-muito-alta: oklch(42% 0.14 25);
+  --status-muito-alta-strong: oklch(36% 0.12 25);
+
+  --chart-1: oklch(39.1% 0.033 143.3);
+  --chart-2: oklch(65.9% 0.108 43.4);
+  --chart-3: oklch(58.8% 0.085 144.4);
+  --chart-4: oklch(68.1% 0.13 72.4);
+  --chart-5: oklch(47.2% 0.02 120);
+}
+
+@theme inline {
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-display: var(--font-display);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-status-leve: var(--status-leve);
+  --color-status-leve-strong: var(--status-leve-strong);
+  --color-status-moderada: var(--status-moderada);
+  --color-status-moderada-strong: var(--status-moderada-strong);
+  --color-status-alta: var(--status-alta);
+  --color-status-alta-strong: var(--status-alta-strong);
+  --color-status-muito-alta: var(--status-muito-alta);
+  --color-status-muito-alta-strong: var(--status-muito-alta-strong);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-border bg-card text-card-foreground shadow-sm;
+  }
+
+  .label {
+    @apply mb-1 block text-sm font-medium text-foreground;
+  }
+
+  .input {
+    @apply flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90 disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-accent {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition hover:opacity-90 disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-border bg-transparent px-4 py-2 text-sm font-medium text-foreground transition hover:bg-secondary disabled:pointer-events-none disabled:opacity-50;
+  }
+}
