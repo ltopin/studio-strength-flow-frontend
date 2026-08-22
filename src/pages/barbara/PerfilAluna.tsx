@@ -4,6 +4,7 @@ import { ArrowLeft, ClipboardPlus, TrendingUp } from "lucide-react"
 
 import { Cabecalho } from "@/components/shared/Cabecalho"
 import { BadgeAssimetria } from "@/components/shared/BadgeAssimetria"
+import { DiagramaCorporal } from "@/components/shared/DiagramaCorporal"
 import { GraficoEvolucao } from "@/components/shared/GraficoEvolucao"
 import { calcularResumoAvaliacao } from "@/lib/calculations"
 import { formatarDataCurta, formatarNumero } from "@/lib/format"
@@ -25,6 +26,7 @@ export function PerfilAluna() {
   if (!cliente) return null
 
   const avaliacoesCronologicas = [...avaliacoes].reverse()
+  const resumoMaisRecente = avaliacoes[0] ? calcularResumoAvaliacao(avaliacoes[0].medicoes, config) : null
 
   return (
     <>
@@ -47,6 +49,12 @@ export function PerfilAluna() {
             Nova avaliação
           </Link>
         </div>
+
+        {resumoMaisRecente && (
+          <div className="mt-6">
+            <DiagramaCorporal resultados={resumoMaisRecente.resultados} />
+          </div>
+        )}
 
         {avaliacoes.length > 0 && (
           <section className="card mt-6 p-5">

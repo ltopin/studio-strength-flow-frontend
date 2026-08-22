@@ -1,4 +1,5 @@
 import { CardMovimento } from "@/components/shared/CardMovimento"
+import { DiagramaCorporal } from "@/components/shared/DiagramaCorporal"
 import { ResumoAvaliacaoCards } from "@/components/shared/ResumoAvaliacaoCards"
 import { calcularResumoAvaliacao } from "@/lib/calculations"
 import { MOVIMENTOS, type Avaliacao, type ConfigMovimentos } from "@/types/dominio"
@@ -17,6 +18,7 @@ export function VisaoAvaliacao({ avaliacao, config }: VisaoAvaliacaoProps) {
 
   return (
     <div className="space-y-4">
+      <DiagramaCorporal resultados={resumo.resultados} />
       <ResumoAvaliacaoCards resumo={resumo} />
       {resumo.resultados.map((resultado, indice) => (
         <CardMovimento key={resultado.movimento} info={MOVIMENTOS[indice]} resultado={resultado} />
