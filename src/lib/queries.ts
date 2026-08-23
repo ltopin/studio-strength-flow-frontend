@@ -5,6 +5,7 @@ import {
   criarCliente,
   listarAvaliacoes,
   listarClientes,
+  listarProtocolos,
   obterAvaliacao,
   obterCliente,
   obterConfig,
@@ -23,6 +24,7 @@ export const chavesQuery = {
   avaliacoesDoCliente: (clienteId: string) => ["clientes", clienteId, "avaliacoes"] as const,
   avaliacao: (id: string) => ["avaliacoes", id] as const,
   config: ["config"] as const,
+  protocolos: ["protocolos"] as const,
 }
 
 export function useClientes() {
@@ -64,6 +66,10 @@ export function useAvaliacao(avaliacaoId: string | undefined) {
 
 export function useConfig() {
   return useQuery({ queryKey: chavesQuery.config, queryFn: obterConfig })
+}
+
+export function useProtocolos() {
+  return useQuery({ queryKey: chavesQuery.protocolos, queryFn: listarProtocolos })
 }
 
 export function useCriarCliente() {

@@ -5,6 +5,7 @@ import { RequerAluna, RequerBarbara } from "@/components/shared/Protegido"
 import { SelecaoPerfil } from "@/pages/SelecaoPerfil"
 import { Painel } from "@/pages/barbara/Painel"
 import { NovaAluna } from "@/pages/barbara/NovaAluna"
+import { EscolherProtocolo } from "@/pages/barbara/EscolherProtocolo"
 import { NovaAvaliacao } from "@/pages/barbara/NovaAvaliacao"
 import { ResultadoAvaliacao } from "@/pages/barbara/ResultadoAvaliacao"
 import { PerfilAluna } from "@/pages/barbara/PerfilAluna"
@@ -43,6 +44,14 @@ export function App() {
           />
           <Route
             path="/avaliar/:clienteId"
+            element={
+              <RequerBarbara>
+                <EscolherProtocolo />
+              </RequerBarbara>
+            }
+          />
+          <Route
+            path="/avaliar/:clienteId/:protocoloId"
             element={
               <RequerBarbara>
                 <NovaAvaliacao />

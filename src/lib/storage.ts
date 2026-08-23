@@ -1,4 +1,4 @@
-import type { Avaliacao, Cliente, ConfigMovimentos } from "@/types/dominio"
+import type { Avaliacao, Cliente, ConfigMovimentos, Protocolo } from "@/types/dominio"
 
 /**
  * Cliente HTTP para a API do backend (repositório studio-strength-flow-backend).
@@ -90,6 +90,12 @@ export async function obterUltimaAvaliacao(clienteId: string): Promise<Avaliacao
 
 export async function criarAvaliacao(dados: Omit<Avaliacao, "id">): Promise<Avaliacao> {
   return apiFetch<Avaliacao>("/api/avaliacoes", { method: "POST", body: JSON.stringify(dados) })
+}
+
+// --- Protocolos --------------------------------------------------------
+
+export async function listarProtocolos(): Promise<Protocolo[]> {
+  return apiFetch<Protocolo[]>("/api/protocolos")
 }
 
 // --- Configurações -----------------------------------------------------

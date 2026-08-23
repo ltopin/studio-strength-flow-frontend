@@ -5,13 +5,18 @@ export function formatarNumero(valor: number, casasDecimais = 1): string {
   })
 }
 
+/** Aceita tanto "YYYY-MM-DD" quanto um ISO datetime completo (ex.: retornado pelo backend). */
+function extrairDataIso(dataIso: string): string {
+  return dataIso.slice(0, 10)
+}
+
 export function formatarDataCurta(dataIso: string): string {
-  const [ano, mes, dia] = dataIso.split("-")
+  const [ano, mes, dia] = extrairDataIso(dataIso).split("-")
   return `${dia}/${mes}/${ano}`
 }
 
 export function formatarDataLonga(dataIso: string): string {
-  const data = new Date(`${dataIso}T00:00:00`)
+  const data = new Date(`${extrairDataIso(dataIso)}T00:00:00`)
   return new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long", year: "numeric" }).format(data)
 }
 

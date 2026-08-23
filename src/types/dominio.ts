@@ -81,3 +81,10 @@ export interface ConfigMovimento {
 }
 
 export type ConfigMovimentos = Record<Movimento, ConfigMovimento>
+
+export interface Protocolo {
+  id: string
+  nome: string
+  movimentos: Movimento[]
+  tempoEstimadoMin: number
+}
