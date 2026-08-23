@@ -95,3 +95,65 @@ export interface RegistroEvolucao {
   data: string
   texto: string
 }
+
+/** Espelha as chaves de `Muscle` de react-body-highlighter, usadas por `DiagramaCorporal`. */
+export type RegiaoDor =
+  | "trapezius"
+  | "upper-back"
+  | "lower-back"
+  | "chest"
+  | "biceps"
+  | "triceps"
+  | "forearm"
+  | "back-deltoids"
+  | "front-deltoids"
+  | "abs"
+  | "obliques"
+  | "adductor"
+  | "hamstring"
+  | "quadriceps"
+  | "abductors"
+  | "calves"
+  | "gluteal"
+  | "head"
+  | "neck"
+  | "knees"
+  | "left-soleus"
+  | "right-soleus"
+
+export const NOMES_REGIAO_DOR: Record<RegiaoDor, string> = {
+  trapezius: "Trapézio",
+  "upper-back": "Costas (superior)",
+  "lower-back": "Lombar",
+  chest: "Peito",
+  biceps: "Bíceps",
+  triceps: "Tríceps",
+  forearm: "Antebraço",
+  "back-deltoids": "Ombro (posterior)",
+  "front-deltoids": "Ombro (anterior)",
+  abs: "Abdômen",
+  obliques: "Oblíquos",
+  adductor: "Adutores",
+  hamstring: "Posterior de coxa",
+  quadriceps: "Quadríceps",
+  abductors: "Abdutores/Quadril",
+  calves: "Panturrilha",
+  gluteal: "Glúteos",
+  head: "Cabeça",
+  neck: "Pescoço",
+  knees: "Joelho",
+  "left-soleus": "Sóleo (esquerdo)",
+  "right-soleus": "Sóleo (direito)",
+}
+
+export interface PontoDor {
+  regiao: RegiaoDor
+  eva: number
+}
+
+export interface RegistroDor {
+  id: string
+  clienteId: string
+  data: string
+  pontos: PontoDor[]
+}

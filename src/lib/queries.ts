@@ -3,14 +3,17 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   criarAvaliacao,
   criarCliente,
+  criarRegistroDor,
   criarRegistroEvolucao,
   listarAvaliacoes,
   listarClientes,
   listarProtocolos,
+  listarRegistrosDor,
   listarRegistrosEvolucao,
   obterAvaliacao,
   obterCliente,
   obterConfig,
+  obterRegistroDor,
   restaurarDadosExemplo,
   salvarConfig,
 } from "@/lib/storage"
@@ -28,6 +31,8 @@ export const chavesQuery = {
   config: ["config"] as const,
   protocolos: ["protocolos"] as const,
   registrosEvolucaoDoCliente: (clienteId: string) => ["clientes", clienteId, "evolucao"] as const,
+  registrosDorDoCliente: (clienteId: string) => ["clientes", clienteId, "dor"] as const,
+  registroDor: (id: string) => ["registros-dor", id] as const,
 }
 
 export function useClientes() {
@@ -83,6 +88,22 @@ export function useRegistrosEvolucaoDoCliente(clienteId: string | undefined) {
   })
 }
 
+export function useRegistrosDorDoCliente(clienteId: string | undefined) {
+  return useQuery({
+    queryKey: chavesQuery.registrosDorDoCliente(clienteId ?? ""),
+    queryFn: () => listarRegistrosDor(clienteId!),
+    enabled: Boolean(clienteId),
+  })
+}
+
+export function useRegistroDor(registroId: string | undefined) {
+  return useQuery({
+    queryKey: chavesQuery.registroDor(registroId ?? ""),
+    queryFn: () => obterRegistroDor(registroId!),
+    enabled: Boolean(registroId),
+  })
+}
+
 export function useCriarCliente() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -110,6 +131,16 @@ export function useCriarRegistroEvolucao() {
     mutationFn: criarRegistroEvolucao,
     onSuccess: (registro) => {
       queryClient.invalidateQueries({ queryKey: chavesQuery.registrosEvolucaoDoCliente(registro.clienteId) })
+    },
+  })
+}
+
+export function useCriarRegistroDor() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: criarRegistroDor,
+    onSuccess: (registro) => {
+      queryClient.invalidateQueries({ queryKey: chavesQuery.registrosDorDoCliente(registro.clienteId) })
     },
   })
 }

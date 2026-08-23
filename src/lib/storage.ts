@@ -1,4 +1,4 @@
-import type { Avaliacao, Cliente, ConfigMovimentos, Protocolo, RegistroEvolucao } from "@/types/dominio"
+import type { Avaliacao, Cliente, ConfigMovimentos, Protocolo, RegistroDor, RegistroEvolucao } from "@/types/dominio"
 
 /**
  * Cliente HTTP para a API do backend (repositório studio-strength-flow-backend).
@@ -101,6 +101,21 @@ export async function listarRegistrosEvolucao(clienteId: string): Promise<Regist
 
 export async function criarRegistroEvolucao(dados: Omit<RegistroEvolucao, "id">): Promise<RegistroEvolucao> {
   return apiFetch<RegistroEvolucao>("/api/registros-evolucao", { method: "POST", body: JSON.stringify(dados) })
+}
+
+// --- Registro de dor -----------------------------------------------------
+
+export async function listarRegistrosDor(clienteId: string): Promise<RegistroDor[]> {
+  const registros = await apiFetch<RegistroDor[]>(`/api/clientes/${clienteId}/registros-dor`)
+  return [...registros].sort((a, b) => b.data.localeCompare(a.data))
+}
+
+export async function obterRegistroDor(registroId: string): Promise<RegistroDor | undefined> {
+  return apiFetchOuIndefinido<RegistroDor>(`/api/registros-dor/${registroId}`)
+}
+
+export async function criarRegistroDor(dados: Omit<RegistroDor, "id">): Promise<RegistroDor> {
+  return apiFetch<RegistroDor>("/api/registros-dor", { method: "POST", body: JSON.stringify(dados) })
 }
 
 // --- Protocolos --------------------------------------------------------

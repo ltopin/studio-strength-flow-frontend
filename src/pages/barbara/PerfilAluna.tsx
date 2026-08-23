@@ -1,16 +1,17 @@
 import { useEffect } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, ClipboardPlus, TrendingUp } from "lucide-react"
+import { ArrowLeft, ClipboardPlus, Stethoscope, TrendingUp } from "lucide-react"
 
 import { Cabecalho } from "@/components/shared/Cabecalho"
 import { BadgeAssimetria } from "@/components/shared/BadgeAssimetria"
+import { Badge } from "@/components/ui/badge"
 import { DiagramaCorporal } from "@/components/shared/DiagramaCorporal"
 import { EvolucaoAtendimento } from "@/components/shared/EvolucaoAtendimento"
 import { GraficoEvolucao } from "@/components/shared/GraficoEvolucao"
-import { calcularResumoAvaliacao } from "@/lib/calculations"
+import { calcularResumoAvaliacao, classificarEva } from "@/lib/calculations"
 import { formatarDataCurta, formatarNumero } from "@/lib/format"
-import { useAvaliacoesDoCliente, useCliente, useConfig } from "@/lib/queries"
-import { obterInfoMovimento } from "@/types/dominio"
+import { useAvaliacoesDoCliente, useCliente, useConfig, useRegistrosDorDoCliente } from "@/lib/queries"
+import { NOMES_REGIAO_DOR, obterInfoMovimento } from "@/types/dominio"
 
 export function PerfilAluna() {
   const { clienteId } = useParams<{ clienteId: string }>()
@@ -19,6 +20,7 @@ export function PerfilAluna() {
   const clienteQuery = useCliente(clienteId)
   const avaliacoesQuery = useAvaliacoesDoCliente(clienteId)
   const configQuery = useConfig()
+  const registrosDorQuery = useRegistrosDorDoCliente(clienteId)
 
   useEffect(() => {
     if (clienteQuery.isSuccess && !clienteQuery.data) navigate("/painel", { replace: true })
@@ -54,6 +56,7 @@ export function PerfilAluna() {
 
   const avaliacoesCronologicas = [...avaliacoes].reverse()
   const resumoMaisRecente = avaliacoes[0] ? calcularResumoAvaliacao(avaliacoes[0].medicoes, config) : null
+  const registrosDor = registrosDorQuery.data ?? []
 
   return (
     <>
@@ -71,10 +74,16 @@ export function PerfilAluna() {
               {cliente.idade} anos · {formatarNumero(cliente.peso)} kg · {formatarNumero(cliente.altura, 2)} m
             </p>
           </div>
-          <Link to={`/avaliar/${cliente.id}`} className="btn-accent">
-            <ClipboardPlus className="h-4 w-4" />
-            Nova avaliação
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link to={`/alunas/${cliente.id}/dor/nova`} className="btn-outline">
+              <Stethoscope className="h-4 w-4" />
+              Dor
+            </Link>
+            <Link to={`/avaliar/${cliente.id}`} className="btn-accent">
+              <ClipboardPlus className="h-4 w-4" />
+              Nova avaliação
+            </Link>
+          </div>
         </div>
 
         <EvolucaoAtendimento clienteId={cliente.id} />
@@ -125,6 +134,45 @@ export function PerfilAluna() {
                         )}
                       </div>
                       {resumo.maiorAssimetria && <BadgeAssimetria classificacao={resumo.maiorAssimetria.classificacao} />}
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </section>
+
+        <section className="mt-6">
+          <h2 className="text-sm font-semibold tracking-wider text-muted-foreground uppercase">Histórico de dor</h2>
+          {registrosDorQuery.isLoading ? (
+            <p className="mt-4 text-sm text-muted-foreground">Carregando...</p>
+          ) : registrosDorQuery.isError ? (
+            <p className="mt-4 text-sm text-muted-foreground">Não foi possível carregar o histórico de dor.</p>
+          ) : registrosDor.length === 0 ? (
+            <p className="mt-4 text-sm text-muted-foreground">Ainda não há registros de dor para esta aluna.</p>
+          ) : (
+            <ul className="mt-4 space-y-3">
+              {registrosDor.map((registro) => {
+                const maiorPonto = registro.pontos.reduce(
+                  (maior, ponto) => (!maior || ponto.eva > maior.eva ? ponto : maior),
+                  registro.pontos[0]
+                )
+                return (
+                  <li key={registro.id}>
+                    <Link
+                      to={`/registro-dor/${registro.id}`}
+                      className="card flex flex-wrap items-center justify-between gap-3 p-4 transition hover:border-primary/40"
+                    >
+                      <div>
+                        <p className="font-medium">{formatarDataCurta(registro.data)}</p>
+                        {maiorPonto && (
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            Maior intensidade: {NOMES_REGIAO_DOR[maiorPonto.regiao]} ({registro.pontos.length}{" "}
+                            {registro.pontos.length === 1 ? "ponto" : "pontos"})
+                          </p>
+                        )}
+                      </div>
+                      {maiorPonto && <Badge variant={classificarEva(maiorPonto.eva)}>EVA {maiorPonto.eva}</Badge>}
                     </Link>
                   </li>
                 )

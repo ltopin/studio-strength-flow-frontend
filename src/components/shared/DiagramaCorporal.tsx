@@ -1,8 +1,9 @@
-import Model, { type IExerciseData, type Muscle } from "react-body-highlighter"
+import Model, { type IExerciseData, type IMuscleStats, type Muscle } from "react-body-highlighter"
 
 import { BadgeAssimetria } from "@/components/shared/BadgeAssimetria"
-import type { ClassificacaoAssimetria, ResultadoMovimento } from "@/lib/calculations"
-import { obterInfoMovimento, type Movimento } from "@/types/dominio"
+import { Badge } from "@/components/ui/badge"
+import { classificarEva, type ClassificacaoAssimetria, type ResultadoMovimento, type SeveridadeEva } from "@/lib/calculations"
+import { NOMES_REGIAO_DOR, obterInfoMovimento, type Movimento, type PontoDor, type RegiaoDor } from "@/types/dominio"
 
 interface RegiaoMuscular {
   musculo: Muscle
@@ -56,8 +57,17 @@ const CORES_POR_TIER = [
   "var(--status-muito-alta)",
 ]
 
+const FREQUENCIA_POR_SEVERIDADE_EVA: Record<SeveridadeEva, number> = {
+  leve: 1,
+  moderada: 2,
+  alta: 3,
+  "muito-alta": 4,
+}
+
 interface DiagramaCorporalProps {
-  resultados: ResultadoMovimento[]
+  resultados?: ResultadoMovimento[]
+  pontosDor?: PontoDor[]
+  onRegiaoClick?: (regiao: RegiaoDor) => void
 }
 
 /**
@@ -80,16 +90,28 @@ function selecionarResultadoPorMusculo(resultados: ResultadoMovimento[]): Set<Mo
   return new Set([...maisRelevantePorMusculo.values()].map((resultado) => resultado.movimento))
 }
 
-export function DiagramaCorporal({ resultados }: DiagramaCorporalProps) {
+export function DiagramaCorporal({ resultados = [], pontosDor = [], onRegiaoClick }: DiagramaCorporalProps) {
   const movimentosSelecionados = selecionarResultadoPorMusculo(resultados)
 
-  const data: IExerciseData[] = resultados
+  const dataResultados: IExerciseData[] = resultados
     .filter((resultado) => movimentosSelecionados.has(resultado.movimento))
     .map((resultado) => ({
       name: obterInfoMovimento(resultado.movimento).nome,
       muscles: [REGIAO_POR_MOVIMENTO[resultado.movimento].musculo],
       frequency: FREQUENCIA_POR_CLASSIFICACAO[resultado.classificacao],
     }))
+
+  const dataPontosDor: IExerciseData[] = pontosDor.map((ponto) => ({
+    name: NOMES_REGIAO_DOR[ponto.regiao],
+    muscles: [ponto.regiao as Muscle],
+    frequency: FREQUENCIA_POR_SEVERIDADE_EVA[classificarEva(ponto.eva)],
+  }))
+
+  const data = [...dataResultados, ...dataPontosDor]
+
+  function aoClicarMusculo({ muscle }: IMuscleStats) {
+    onRegiaoClick?.(muscle as RegiaoDor)
+  }
 
   return (
     <section className="card p-5">
@@ -98,24 +120,49 @@ export function DiagramaCorporal({ resultados }: DiagramaCorporalProps) {
           <p className="mb-1 text-center text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
             Frontal
           </p>
-          <Model type="anterior" data={data} bodyColor="var(--secondary)" highlightedColors={CORES_POR_TIER} />
+          <Model
+            type="anterior"
+            data={data}
+            bodyColor="var(--secondary)"
+            highlightedColors={CORES_POR_TIER}
+            onClick={onRegiaoClick ? aoClicarMusculo : undefined}
+          />
         </div>
         <div className="mx-auto w-full max-w-[180px]">
           <p className="mb-1 text-center text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
             Posterior
           </p>
-          <Model type="posterior" data={data} bodyColor="var(--secondary)" highlightedColors={CORES_POR_TIER} />
+          <Model
+            type="posterior"
+            data={data}
+            bodyColor="var(--secondary)"
+            highlightedColors={CORES_POR_TIER}
+            onClick={onRegiaoClick ? aoClicarMusculo : undefined}
+          />
         </div>
       </div>
 
-      <ul className="mt-4 grid grid-cols-1 gap-1.5 border-t border-border pt-4 sm:grid-cols-2">
-        {resultados.map((resultado) => (
-          <li key={resultado.movimento} className="flex items-center justify-between gap-2 text-xs">
-            <span className="text-muted-foreground">{obterInfoMovimento(resultado.movimento).nome}</span>
-            <BadgeAssimetria classificacao={resultado.classificacao} />
-          </li>
-        ))}
-      </ul>
+      {resultados.length > 0 && (
+        <ul className="mt-4 grid grid-cols-1 gap-1.5 border-t border-border pt-4 sm:grid-cols-2">
+          {resultados.map((resultado) => (
+            <li key={resultado.movimento} className="flex items-center justify-between gap-2 text-xs">
+              <span className="text-muted-foreground">{obterInfoMovimento(resultado.movimento).nome}</span>
+              <BadgeAssimetria classificacao={resultado.classificacao} />
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {pontosDor.length > 0 && (
+        <ul className="mt-4 grid grid-cols-1 gap-1.5 border-t border-border pt-4 sm:grid-cols-2">
+          {pontosDor.map((ponto, indice) => (
+            <li key={`${ponto.regiao}-${indice}`} className="flex items-center justify-between gap-2 text-xs">
+              <span className="text-muted-foreground">{NOMES_REGIAO_DOR[ponto.regiao]}</span>
+              <Badge variant={classificarEva(ponto.eva)}>EVA {ponto.eva}</Badge>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   )
 }

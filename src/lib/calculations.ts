@@ -40,6 +40,16 @@ export function classificarAssimetria(percentual: number): ClassificacaoAssimetr
   return "Muito alta"
 }
 
+export type SeveridadeEva = "leve" | "moderada" | "alta" | "muito-alta"
+
+/** Faixas inspiradas na escala EVA de dor (0–10), no mesmo padrão visual de `ClassificacaoAssimetria`. */
+export function classificarEva(eva: number): SeveridadeEva {
+  if (eva <= 3) return "leve"
+  if (eva <= 6) return "moderada"
+  if (eva <= 8) return "alta"
+  return "muito-alta"
+}
+
 export interface ZonaTreinoCalculada {
   nome: string
   percentualLabel: string

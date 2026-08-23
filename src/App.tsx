@@ -9,6 +9,8 @@ import { EscolherProtocolo } from "@/pages/barbara/EscolherProtocolo"
 import { NovaAvaliacao } from "@/pages/barbara/NovaAvaliacao"
 import { ResultadoAvaliacao } from "@/pages/barbara/ResultadoAvaliacao"
 import { PerfilAluna } from "@/pages/barbara/PerfilAluna"
+import { RegistrarDor } from "@/pages/barbara/RegistrarDor"
+import { DetalheRegistroDor } from "@/pages/barbara/DetalheRegistroDor"
 import { Configuracoes } from "@/pages/barbara/Configuracoes"
 import { DashboardAluna } from "@/pages/aluna/DashboardAluna"
 
@@ -63,6 +65,22 @@ export function App() {
             element={
               <RequerBarbara>
                 <ResultadoAvaliacao />
+              </RequerBarbara>
+            }
+          />
+          <Route
+            path="/alunas/:clienteId/dor/nova"
+            element={
+              <RequerBarbara>
+                <RegistrarDor />
+              </RequerBarbara>
+            }
+          />
+          <Route
+            path="/registro-dor/:registroId"
+            element={
+              <RequerBarbara>
+                <DetalheRegistroDor />
               </RequerBarbara>
             }
           />
