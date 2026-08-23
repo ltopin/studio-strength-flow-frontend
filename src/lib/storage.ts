@@ -1,4 +1,4 @@
-import type { Avaliacao, Cliente, ConfigMovimentos, Protocolo } from "@/types/dominio"
+import type { Avaliacao, Cliente, ConfigMovimentos, Protocolo, RegistroEvolucao } from "@/types/dominio"
 
 /**
  * Cliente HTTP para a API do backend (repositório studio-strength-flow-backend).
@@ -90,6 +90,17 @@ export async function obterUltimaAvaliacao(clienteId: string): Promise<Avaliacao
 
 export async function criarAvaliacao(dados: Omit<Avaliacao, "id">): Promise<Avaliacao> {
   return apiFetch<Avaliacao>("/api/avaliacoes", { method: "POST", body: JSON.stringify(dados) })
+}
+
+// --- Evolução de atendimento -------------------------------------------
+
+export async function listarRegistrosEvolucao(clienteId: string): Promise<RegistroEvolucao[]> {
+  const registros = await apiFetch<RegistroEvolucao[]>(`/api/clientes/${clienteId}/registros-evolucao`)
+  return [...registros].sort((a, b) => b.data.localeCompare(a.data))
+}
+
+export async function criarRegistroEvolucao(dados: Omit<RegistroEvolucao, "id">): Promise<RegistroEvolucao> {
+  return apiFetch<RegistroEvolucao>("/api/registros-evolucao", { method: "POST", body: JSON.stringify(dados) })
 }
 
 // --- Protocolos --------------------------------------------------------

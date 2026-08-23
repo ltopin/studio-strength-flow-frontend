@@ -88,3 +88,10 @@ export interface Protocolo {
   movimentos: Movimento[]
   tempoEstimadoMin: number
 }
+
+export interface RegistroEvolucao {
+  id: string
+  clienteId: string
+  data: string
+  texto: string
+}

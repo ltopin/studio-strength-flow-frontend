@@ -3,9 +3,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   criarAvaliacao,
   criarCliente,
+  criarRegistroEvolucao,
   listarAvaliacoes,
   listarClientes,
   listarProtocolos,
+  listarRegistrosEvolucao,
   obterAvaliacao,
   obterCliente,
   obterConfig,
@@ -25,6 +27,7 @@ export const chavesQuery = {
   avaliacao: (id: string) => ["avaliacoes", id] as const,
   config: ["config"] as const,
   protocolos: ["protocolos"] as const,
+  registrosEvolucaoDoCliente: (clienteId: string) => ["clientes", clienteId, "evolucao"] as const,
 }
 
 export function useClientes() {
@@ -72,6 +75,14 @@ export function useProtocolos() {
   return useQuery({ queryKey: chavesQuery.protocolos, queryFn: listarProtocolos })
 }
 
+export function useRegistrosEvolucaoDoCliente(clienteId: string | undefined) {
+  return useQuery({
+    queryKey: chavesQuery.registrosEvolucaoDoCliente(clienteId ?? ""),
+    queryFn: () => listarRegistrosEvolucao(clienteId!),
+    enabled: Boolean(clienteId),
+  })
+}
+
 export function useCriarCliente() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -89,6 +100,16 @@ export function useCriarAvaliacao() {
     onSuccess: (avaliacao) => {
       queryClient.invalidateQueries({ queryKey: chavesQuery.avaliacoesDoCliente(avaliacao.clienteId) })
       queryClient.invalidateQueries({ queryKey: chavesQuery.clientes })
+    },
+  })
+}
+
+export function useCriarRegistroEvolucao() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: criarRegistroEvolucao,
+    onSuccess: (registro) => {
+      queryClient.invalidateQueries({ queryKey: chavesQuery.registrosEvolucaoDoCliente(registro.clienteId) })
     },
   })
 }

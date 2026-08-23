@@ -5,6 +5,7 @@ import { ArrowLeft, ClipboardPlus, TrendingUp } from "lucide-react"
 import { Cabecalho } from "@/components/shared/Cabecalho"
 import { BadgeAssimetria } from "@/components/shared/BadgeAssimetria"
 import { DiagramaCorporal } from "@/components/shared/DiagramaCorporal"
+import { EvolucaoAtendimento } from "@/components/shared/EvolucaoAtendimento"
 import { GraficoEvolucao } from "@/components/shared/GraficoEvolucao"
 import { calcularResumoAvaliacao } from "@/lib/calculations"
 import { formatarDataCurta, formatarNumero } from "@/lib/format"
@@ -75,6 +76,8 @@ export function PerfilAluna() {
             Nova avaliação
           </Link>
         </div>
+
+        <EvolucaoAtendimento clienteId={cliente.id} />
 
         {resumoMaisRecente && (
           <div className="mt-6">
