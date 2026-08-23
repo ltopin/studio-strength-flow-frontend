@@ -5,21 +5,47 @@ import { ArrowLeft } from "lucide-react"
 import { Cabecalho } from "@/components/shared/Cabecalho"
 import { VisaoAvaliacao } from "@/components/shared/VisaoAvaliacao"
 import { formatarDataLonga } from "@/lib/format"
-import { obterAvaliacao, obterCliente, obterConfig } from "@/lib/storage"
+import { useAvaliacao, useCliente, useConfig } from "@/lib/queries"
 
 export function ResultadoAvaliacao() {
   const { avaliacaoId } = useParams<{ avaliacaoId: string }>()
   const navigate = useNavigate()
 
-  const avaliacao = avaliacaoId ? obterAvaliacao(avaliacaoId) : undefined
-  const cliente = avaliacao ? obterCliente(avaliacao.clienteId) : undefined
-  const config = obterConfig()
+  const avaliacaoQuery = useAvaliacao(avaliacaoId)
+  const clienteQuery = useCliente(avaliacaoQuery.data?.clienteId)
+  const configQuery = useConfig()
 
   useEffect(() => {
-    if (!avaliacao) navigate("/painel", { replace: true })
-  }, [avaliacao, navigate])
+    if (avaliacaoQuery.isSuccess && !avaliacaoQuery.data) navigate("/painel", { replace: true })
+  }, [avaliacaoQuery.isSuccess, avaliacaoQuery.data, navigate])
 
-  if (!avaliacao) return null
+  if (avaliacaoQuery.isLoading || configQuery.isLoading) {
+    return (
+      <>
+        <Cabecalho />
+        <main className="mx-auto w-full max-w-3xl px-4 py-8">
+          <p className="text-sm text-muted-foreground">Carregando...</p>
+        </main>
+      </>
+    )
+  }
+
+  if (avaliacaoQuery.isSuccess && !avaliacaoQuery.data) return null
+
+  if (avaliacaoQuery.isError || configQuery.isError || !configQuery.data) {
+    return (
+      <>
+        <Cabecalho />
+        <main className="mx-auto w-full max-w-3xl px-4 py-8">
+          <p className="text-sm text-muted-foreground">Não foi possível carregar os dados. Tente novamente.</p>
+        </main>
+      </>
+    )
+  }
+
+  const avaliacao = avaliacaoQuery.data!
+  const cliente = clienteQuery.data
+  const config = configQuery.data
 
   return (
     <>

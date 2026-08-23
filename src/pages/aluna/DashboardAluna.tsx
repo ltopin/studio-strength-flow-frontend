@@ -5,7 +5,7 @@ import { CalendarDays, HeartPulse } from "lucide-react"
 import { Cabecalho } from "@/components/shared/Cabecalho"
 import { VisaoAvaliacao } from "@/components/shared/VisaoAvaliacao"
 import { formatarDataLonga } from "@/lib/format"
-import { obterCliente, obterConfig, obterUltimaAvaliacao } from "@/lib/storage"
+import { useCliente, useConfig, useUltimaAvaliacao } from "@/lib/queries"
 
 const HOJE_ISO = new Date().toISOString().slice(0, 10)
 
@@ -13,16 +13,41 @@ export function DashboardAluna() {
   const { clienteId } = useParams<{ clienteId: string }>()
   const navigate = useNavigate()
 
-  const cliente = clienteId ? obterCliente(clienteId) : undefined
-  const avaliacao = clienteId ? obterUltimaAvaliacao(clienteId) : undefined
-  const config = obterConfig()
+  const clienteQuery = useCliente(clienteId)
+  const avaliacaoQuery = useUltimaAvaliacao(clienteId)
+  const configQuery = useConfig()
 
   useEffect(() => {
-    if (!cliente) navigate("/", { replace: true })
-  }, [cliente, navigate])
+    if (clienteQuery.isSuccess && !clienteQuery.data) navigate("/", { replace: true })
+  }, [clienteQuery.isSuccess, clienteQuery.data, navigate])
 
-  if (!cliente) return null
+  if (clienteQuery.isLoading || avaliacaoQuery.isLoading || configQuery.isLoading) {
+    return (
+      <>
+        <Cabecalho />
+        <main className="mx-auto w-full max-w-3xl px-4 py-8">
+          <p className="text-sm text-muted-foreground">Carregando...</p>
+        </main>
+      </>
+    )
+  }
 
+  if (clienteQuery.isSuccess && !clienteQuery.data) return null
+
+  if (clienteQuery.isError || avaliacaoQuery.isError || configQuery.isError || !configQuery.data) {
+    return (
+      <>
+        <Cabecalho />
+        <main className="mx-auto w-full max-w-3xl px-4 py-8">
+          <p className="text-sm text-muted-foreground">Não foi possível carregar os dados. Tente novamente.</p>
+        </main>
+      </>
+    )
+  }
+
+  const cliente = clienteQuery.data!
+  const avaliacao = avaliacaoQuery.data
+  const config = configQuery.data
   const primeiroNome = cliente.nome.split(" ")[0]
 
   return (

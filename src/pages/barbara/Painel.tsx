@@ -1,3 +1,4 @@
+import { useQueries } from "@tanstack/react-query"
 import { Link } from "react-router-dom"
 import { ClipboardPlus, Settings2, UserPlus, UsersRound } from "lucide-react"
 
@@ -5,8 +6,9 @@ import { Cabecalho } from "@/components/shared/Cabecalho"
 import { BadgeAssimetria } from "@/components/shared/BadgeAssimetria"
 import { calcularResumoAvaliacao, type ClassificacaoAssimetria } from "@/lib/calculations"
 import { formatarDataCurta, formatarNumero } from "@/lib/format"
-import { listarAvaliacoes, listarClientes, obterConfig } from "@/lib/storage"
-import { obterInfoMovimento, type Cliente } from "@/types/dominio"
+import { chavesQuery, useClientes, useConfig } from "@/lib/queries"
+import { listarAvaliacoes } from "@/lib/storage"
+import { obterInfoMovimento, type Avaliacao, type Cliente, type ConfigMovimentos } from "@/types/dominio"
 
 const CLASSIFICACOES_QUE_PEDEM_ATENCAO: ClassificacaoAssimetria[] = ["Alta", "Muito alta"]
 
@@ -17,10 +19,9 @@ interface LinhaAluna {
   classificacao: ClassificacaoAssimetria | null
 }
 
-function montarLinhas(): LinhaAluna[] {
-  const config = obterConfig()
-  return listarClientes().map((cliente): LinhaAluna => {
-    const [ultima] = listarAvaliacoes(cliente.id)
+function montarLinhas(clientes: Cliente[], config: ConfigMovimentos, avaliacoesPorCliente: Avaliacao[][]): LinhaAluna[] {
+  return clientes.map((cliente, indice): LinhaAluna => {
+    const [ultima] = avaliacoesPorCliente[indice] ?? []
     if (!ultima) {
       return { cliente, ultimaAvaliacaoData: null, maiorAssimetriaNome: null, classificacao: null }
     }
@@ -35,7 +36,47 @@ function montarLinhas(): LinhaAluna[] {
 }
 
 export function Painel() {
-  const linhas = montarLinhas()
+  const clientesQuery = useClientes()
+  const configQuery = useConfig()
+  const clientes = clientesQuery.data ?? []
+
+  const avaliacoesQueries = useQueries({
+    queries: clientes.map((cliente) => ({
+      queryKey: chavesQuery.avaliacoesDoCliente(cliente.id),
+      queryFn: () => listarAvaliacoes(cliente.id),
+    })),
+  })
+
+  const carregando = clientesQuery.isLoading || configQuery.isLoading || avaliacoesQueries.some((q) => q.isLoading)
+  const comErro = clientesQuery.isError || configQuery.isError || avaliacoesQueries.some((q) => q.isError)
+
+  if (carregando) {
+    return (
+      <>
+        <Cabecalho />
+        <main className="mx-auto w-full max-w-5xl px-4 py-8">
+          <p className="text-sm text-muted-foreground">Carregando...</p>
+        </main>
+      </>
+    )
+  }
+
+  if (comErro || !configQuery.data) {
+    return (
+      <>
+        <Cabecalho />
+        <main className="mx-auto w-full max-w-5xl px-4 py-8">
+          <p className="text-sm text-muted-foreground">Não foi possível carregar os dados. Tente novamente.</p>
+        </main>
+      </>
+    )
+  }
+
+  const linhas = montarLinhas(
+    clientes,
+    configQuery.data,
+    avaliacoesQueries.map((q) => q.data ?? [])
+  )
   const totalAvaliacoes = linhas.filter((l) => l.ultimaAvaliacaoData).length
   const pedemAtencao = linhas.filter(
     (l) => l.classificacao && CLASSIFICACOES_QUE_PEDEM_ATENCAO.includes(l.classificacao)

@@ -2,12 +2,13 @@ import { useNavigate } from "react-router-dom"
 import { ClipboardList, Sparkles, UserRound } from "lucide-react"
 
 import { useSessao } from "@/lib/use-sessao"
-import { listarClientes } from "@/lib/storage"
+import { useClientes } from "@/lib/queries"
 
 export function SelecaoPerfil() {
   const navigate = useNavigate()
   const { entrarComoBarbara, entrarComoAluna } = useSessao()
-  const clientes = listarClientes()
+  const clientesQuery = useClientes()
+  const clientes = clientesQuery.data ?? []
 
   function handleEntrarComoBarbara() {
     entrarComoBarbara()

@@ -8,22 +8,48 @@ import { DiagramaCorporal } from "@/components/shared/DiagramaCorporal"
 import { GraficoEvolucao } from "@/components/shared/GraficoEvolucao"
 import { calcularResumoAvaliacao } from "@/lib/calculations"
 import { formatarDataCurta, formatarNumero } from "@/lib/format"
-import { listarAvaliacoes, obterCliente, obterConfig } from "@/lib/storage"
+import { useAvaliacoesDoCliente, useCliente, useConfig } from "@/lib/queries"
 import { obterInfoMovimento } from "@/types/dominio"
 
 export function PerfilAluna() {
   const { clienteId } = useParams<{ clienteId: string }>()
   const navigate = useNavigate()
 
-  const cliente = clienteId ? obterCliente(clienteId) : undefined
-  const avaliacoes = clienteId ? listarAvaliacoes(clienteId) : []
-  const config = obterConfig()
+  const clienteQuery = useCliente(clienteId)
+  const avaliacoesQuery = useAvaliacoesDoCliente(clienteId)
+  const configQuery = useConfig()
 
   useEffect(() => {
-    if (!cliente) navigate("/painel", { replace: true })
-  }, [cliente, navigate])
+    if (clienteQuery.isSuccess && !clienteQuery.data) navigate("/painel", { replace: true })
+  }, [clienteQuery.isSuccess, clienteQuery.data, navigate])
 
-  if (!cliente) return null
+  if (clienteQuery.isLoading || avaliacoesQuery.isLoading || configQuery.isLoading) {
+    return (
+      <>
+        <Cabecalho />
+        <main className="mx-auto w-full max-w-5xl px-4 py-8">
+          <p className="text-sm text-muted-foreground">Carregando...</p>
+        </main>
+      </>
+    )
+  }
+
+  if (clienteQuery.isSuccess && !clienteQuery.data) return null
+
+  if (clienteQuery.isError || avaliacoesQuery.isError || configQuery.isError || !configQuery.data) {
+    return (
+      <>
+        <Cabecalho />
+        <main className="mx-auto w-full max-w-5xl px-4 py-8">
+          <p className="text-sm text-muted-foreground">Não foi possível carregar os dados. Tente novamente.</p>
+        </main>
+      </>
+    )
+  }
+
+  const cliente = clienteQuery.data!
+  const avaliacoes = avaliacoesQuery.data ?? []
+  const config = configQuery.data
 
   const avaliacoesCronologicas = [...avaliacoes].reverse()
   const resumoMaisRecente = avaliacoes[0] ? calcularResumoAvaliacao(avaliacoes[0].medicoes, config) : null

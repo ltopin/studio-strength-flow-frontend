@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react"
+import { useEffect, useState, type FormEvent } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Save } from "lucide-react"
 
@@ -6,7 +6,7 @@ import { Cabecalho } from "@/components/shared/Cabecalho"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { criarAvaliacao, obterCliente } from "@/lib/storage"
+import { useCliente, useCriarAvaliacao } from "@/lib/queries"
 import { MOVIMENTOS, type Lado, type Medicao, type Movimento, type RegiaoCorporal } from "@/types/dominio"
 
 type ForcasPorMovimento = Record<Movimento, Record<Lado, string>>
@@ -31,13 +31,12 @@ export function NovaAvaliacao() {
   const [data, setData] = useState(hojeIso())
   const [forcas, setForcas] = useState<ForcasPorMovimento>(forcasIniciais)
 
-  const cliente = useMemo(() => (clienteId ? obterCliente(clienteId) : undefined), [clienteId])
+  const clienteQuery = useCliente(clienteId)
+  const criarAvaliacaoMutation = useCriarAvaliacao()
 
   useEffect(() => {
-    if (clienteId && !obterCliente(clienteId)) {
-      navigate("/painel", { replace: true })
-    }
-  }, [clienteId, navigate])
+    if (clienteQuery.isSuccess && !clienteQuery.data) navigate("/painel", { replace: true })
+  }, [clienteQuery.isSuccess, clienteQuery.data, navigate])
 
   function atualizarForca(movimento: Movimento, lado: Lado, valor: string) {
     setForcas((atual) => ({ ...atual, [movimento]: { ...atual[movimento], [lado]: valor } }))
@@ -55,9 +54,37 @@ export function NovaAvaliacao() {
       }))
     )
 
-    const avaliacao = criarAvaliacao({ clienteId, data, medicoes })
-    navigate(`/avaliacao/${avaliacao.id}`)
+    criarAvaliacaoMutation.mutate(
+      { clienteId, data, medicoes },
+      { onSuccess: (avaliacao) => navigate(`/avaliacao/${avaliacao.id}`) }
+    )
   }
+
+  if (clienteQuery.isLoading) {
+    return (
+      <>
+        <Cabecalho />
+        <main className="mx-auto w-full max-w-3xl px-4 py-8">
+          <p className="text-sm text-muted-foreground">Carregando...</p>
+        </main>
+      </>
+    )
+  }
+
+  if (clienteQuery.isSuccess && !clienteQuery.data) return null
+
+  if (clienteQuery.isError) {
+    return (
+      <>
+        <Cabecalho />
+        <main className="mx-auto w-full max-w-3xl px-4 py-8">
+          <p className="text-sm text-muted-foreground">Não foi possível carregar os dados. Tente novamente.</p>
+        </main>
+      </>
+    )
+  }
+
+  const cliente = clienteQuery.data
 
   return (
     <>
@@ -105,7 +132,11 @@ export function NovaAvaliacao() {
             </section>
           ))}
 
-          <Button type="submit" variant="primary" className="w-full">
+          {criarAvaliacaoMutation.isError && (
+            <p className="text-sm text-status-alta-strong">Não foi possível salvar. Tente novamente.</p>
+          )}
+
+          <Button type="submit" variant="primary" className="w-full" disabled={criarAvaliacaoMutation.isPending}>
             <Save className="h-4 w-4" />
             Salvar avaliação e ver resultado
           </Button>
