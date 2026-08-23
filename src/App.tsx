@@ -13,6 +13,8 @@ import { RegistrarDor } from "@/pages/barbara/RegistrarDor"
 import { DetalheRegistroDor } from "@/pages/barbara/DetalheRegistroDor"
 import { RegistrarAnamnese } from "@/pages/barbara/RegistrarAnamnese"
 import { DetalheAnamnese } from "@/pages/barbara/DetalheAnamnese"
+import { RegistrarSF36 } from "@/pages/barbara/RegistrarSF36"
+import { DetalheSF36 } from "@/pages/barbara/DetalheSF36"
 import { Configuracoes } from "@/pages/barbara/Configuracoes"
 import { DashboardAluna } from "@/pages/aluna/DashboardAluna"
 
@@ -99,6 +101,22 @@ export function App() {
             element={
               <RequerBarbara>
                 <DetalheAnamnese />
+              </RequerBarbara>
+            }
+          />
+          <Route
+            path="/alunas/:clienteId/sf36/nova"
+            element={
+              <RequerBarbara>
+                <RegistrarSF36 />
+              </RequerBarbara>
+            }
+          />
+          <Route
+            path="/sf36/:registroId"
+            element={
+              <RequerBarbara>
+                <DetalheSF36 />
               </RequerBarbara>
             }
           />

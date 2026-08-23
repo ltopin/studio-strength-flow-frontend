@@ -6,6 +6,7 @@ import type {
   RegistroAnamnese,
   RegistroDor,
   RegistroEvolucao,
+  RegistroSF36,
 } from "@/types/dominio"
 
 /**
@@ -139,6 +140,21 @@ export async function obterAnamnese(registroId: string): Promise<RegistroAnamnes
 
 export async function criarAnamnese(dados: Omit<RegistroAnamnese, "id">): Promise<RegistroAnamnese> {
   return apiFetch<RegistroAnamnese>("/api/anamneses", { method: "POST", body: JSON.stringify(dados) })
+}
+
+// --- RAND-36 (nome técnico interno: sf36) -------------------------------
+
+export async function listarRegistrosSF36(clienteId: string): Promise<RegistroSF36[]> {
+  const registros = await apiFetch<RegistroSF36[]>(`/api/clientes/${clienteId}/registros-sf36`)
+  return [...registros].sort((a, b) => b.data.localeCompare(a.data))
+}
+
+export async function obterRegistroSF36(registroId: string): Promise<RegistroSF36 | undefined> {
+  return apiFetchOuIndefinido<RegistroSF36>(`/api/registros-sf36/${registroId}`)
+}
+
+export async function criarRegistroSF36(dados: Omit<RegistroSF36, "id">): Promise<RegistroSF36> {
+  return apiFetch<RegistroSF36>("/api/registros-sf36", { method: "POST", body: JSON.stringify(dados) })
 }
 
 // --- Protocolos --------------------------------------------------------

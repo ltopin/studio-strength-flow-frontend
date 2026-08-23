@@ -6,17 +6,20 @@ import {
   criarCliente,
   criarRegistroDor,
   criarRegistroEvolucao,
+  criarRegistroSF36,
   listarAnamneses,
   listarAvaliacoes,
   listarClientes,
   listarProtocolos,
   listarRegistrosDor,
   listarRegistrosEvolucao,
+  listarRegistrosSF36,
   obterAnamnese,
   obterAvaliacao,
   obterCliente,
   obterConfig,
   obterRegistroDor,
+  obterRegistroSF36,
   restaurarDadosExemplo,
   salvarConfig,
 } from "@/lib/storage"
@@ -38,6 +41,8 @@ export const chavesQuery = {
   registroDor: (id: string) => ["registros-dor", id] as const,
   anamnesesDoCliente: (clienteId: string) => ["clientes", clienteId, "anamneses"] as const,
   anamnese: (id: string) => ["anamneses", id] as const,
+  registrosSF36DoCliente: (clienteId: string) => ["clientes", clienteId, "sf36"] as const,
+  registroSF36: (id: string) => ["sf36", id] as const,
 }
 
 export function useClientes() {
@@ -125,6 +130,22 @@ export function useAnamnese(registroId: string | undefined) {
   })
 }
 
+export function useRegistrosSF36DoCliente(clienteId: string | undefined) {
+  return useQuery({
+    queryKey: chavesQuery.registrosSF36DoCliente(clienteId ?? ""),
+    queryFn: () => listarRegistrosSF36(clienteId!),
+    enabled: Boolean(clienteId),
+  })
+}
+
+export function useRegistroSF36(registroId: string | undefined) {
+  return useQuery({
+    queryKey: chavesQuery.registroSF36(registroId ?? ""),
+    queryFn: () => obterRegistroSF36(registroId!),
+    enabled: Boolean(registroId),
+  })
+}
+
 export function useCriarCliente() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -172,6 +193,16 @@ export function useCriarAnamnese() {
     mutationFn: criarAnamnese,
     onSuccess: (registro) => {
       queryClient.invalidateQueries({ queryKey: chavesQuery.anamnesesDoCliente(registro.clienteId) })
+    },
+  })
+}
+
+export function useCriarRegistroSF36() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: criarRegistroSF36,
+    onSuccess: (registro) => {
+      queryClient.invalidateQueries({ queryKey: chavesQuery.registrosSF36DoCliente(registro.clienteId) })
     },
   })
 }

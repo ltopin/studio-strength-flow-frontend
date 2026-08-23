@@ -1,4 +1,14 @@
-import { MOVIMENTOS, type ConfigMovimento, type ConfigMovimentos, type Lado, type Medicao, type Movimento } from "@/types/dominio"
+import {
+  DOMINIOS_SF36,
+  ITENS_SF36,
+  MOVIMENTOS,
+  type ConfigMovimento,
+  type ConfigMovimentos,
+  type DominioSF36,
+  type Lado,
+  type Medicao,
+  type Movimento,
+} from "@/types/dominio"
 
 /** Aceleração da gravidade padrão (m/s²), usada para converter kgf em torque. */
 const GRAVIDADE = 9.80665
@@ -217,6 +227,37 @@ export interface ResumoAvaliacao {
   maiorAssimetria: ResultadoMovimento | null
   movimentosEquilibrados: number
   relacoesMusculares: RelacaoMuscular[]
+}
+
+export type ResultadoDominiosSF36 = Record<DominioSF36, number>
+
+/** Deriva a pontuação 0–100 de cada um dos 8 domínios do RAND-36 a partir das 36 respostas brutas (ver design.md). */
+export function calcularDominiosSF36(respostas: number[]): ResultadoDominiosSF36 {
+  const somas = new Map<DominioSF36, number>()
+  const contagens = new Map<DominioSF36, number>()
+
+  for (const item of ITENS_SF36) {
+    if (!item.dominio) continue
+    const resposta = respostas[item.indice]
+    const pontuacaoItem = item.recodificacao[resposta - 1] ?? 0
+    somas.set(item.dominio, (somas.get(item.dominio) ?? 0) + pontuacaoItem)
+    contagens.set(item.dominio, (contagens.get(item.dominio) ?? 0) + 1)
+  }
+
+  return Object.fromEntries(
+    DOMINIOS_SF36.map((dominio) => [
+      dominio.chave,
+      (somas.get(dominio.chave) ?? 0) / (contagens.get(dominio.chave) ?? 1),
+    ])
+  ) as ResultadoDominiosSF36
+}
+
+/** Faixas no mesmo padrão visual de `classificarEva`, mas com polaridade invertida: pontuação alta = melhor qualidade de vida. */
+export function classificarPontuacaoSF36(pontuacao: number): SeveridadeEva {
+  if (pontuacao >= 75) return "leve"
+  if (pontuacao >= 50) return "moderada"
+  if (pontuacao >= 25) return "alta"
+  return "muito-alta"
 }
 
 export function calcularResumoAvaliacao(medicoes: Medicao[], config: ConfigMovimentos): ResumoAvaliacao {

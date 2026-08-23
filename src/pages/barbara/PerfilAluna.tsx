@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, ClipboardList, ClipboardPlus, Stethoscope, TrendingUp } from "lucide-react"
+import { ArrowLeft, ClipboardList, ClipboardPlus, HeartPulse, Stethoscope, TrendingUp } from "lucide-react"
 
 import { Cabecalho } from "@/components/shared/Cabecalho"
 import { BadgeAssimetria } from "@/components/shared/BadgeAssimetria"
@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { DiagramaCorporal } from "@/components/shared/DiagramaCorporal"
 import { EvolucaoAtendimento } from "@/components/shared/EvolucaoAtendimento"
 import { GraficoEvolucao } from "@/components/shared/GraficoEvolucao"
-import { calcularResumoAvaliacao, classificarEva } from "@/lib/calculations"
+import { calcularDominiosSF36, calcularResumoAvaliacao, classificarEva, classificarPontuacaoSF36 } from "@/lib/calculations"
 import { formatarDataCurta, formatarNumero } from "@/lib/format"
 import {
   useAnamnesesDoCliente,
@@ -16,6 +16,7 @@ import {
   useCliente,
   useConfig,
   useRegistrosDorDoCliente,
+  useRegistrosSF36DoCliente,
 } from "@/lib/queries"
 import { NOMES_REGIAO_DOR, obterInfoMovimento } from "@/types/dominio"
 
@@ -28,6 +29,7 @@ export function PerfilAluna() {
   const configQuery = useConfig()
   const registrosDorQuery = useRegistrosDorDoCliente(clienteId)
   const anamnesesQuery = useAnamnesesDoCliente(clienteId)
+  const registrosSF36Query = useRegistrosSF36DoCliente(clienteId)
 
   useEffect(() => {
     if (clienteQuery.isSuccess && !clienteQuery.data) navigate("/painel", { replace: true })
@@ -65,6 +67,7 @@ export function PerfilAluna() {
   const resumoMaisRecente = avaliacoes[0] ? calcularResumoAvaliacao(avaliacoes[0].medicoes, config) : null
   const registrosDor = registrosDorQuery.data ?? []
   const anamneses = anamnesesQuery.data ?? []
+  const registrosSF36 = registrosSF36Query.data ?? []
 
   return (
     <>
@@ -90,6 +93,10 @@ export function PerfilAluna() {
             <Link to={`/alunas/${cliente.id}/dor/nova`} className="btn-outline">
               <Stethoscope className="h-4 w-4" />
               Dor
+            </Link>
+            <Link to={`/alunas/${cliente.id}/sf36/nova`} className="btn-outline">
+              <HeartPulse className="h-4 w-4" />
+              RAND-36
             </Link>
             <Link to={`/avaliar/${cliente.id}`} className="btn-accent">
               <ClipboardPlus className="h-4 w-4" />
@@ -214,6 +221,44 @@ export function PerfilAluna() {
                         )}
                       </div>
                       {maiorPonto && <Badge variant={classificarEva(maiorPonto.eva)}>EVA {maiorPonto.eva}</Badge>}
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </section>
+
+        <section className="mt-6">
+          <h2 className="text-sm font-semibold tracking-wider text-muted-foreground uppercase">
+            Histórico de RAND-36
+          </h2>
+          {registrosSF36Query.isLoading ? (
+            <p className="mt-4 text-sm text-muted-foreground">Carregando...</p>
+          ) : registrosSF36Query.isError ? (
+            <p className="mt-4 text-sm text-muted-foreground">Não foi possível carregar o histórico de RAND-36.</p>
+          ) : registrosSF36.length === 0 ? (
+            <p className="mt-4 text-sm text-muted-foreground">Ainda não há registros de RAND-36 para esta aluna.</p>
+          ) : (
+            <ul className="mt-4 space-y-3">
+              {registrosSF36.map((registro) => {
+                const dominios = Object.values(calcularDominiosSF36(registro.respostas))
+                const pontuacaoGeral = dominios.reduce((soma, valor) => soma + valor, 0) / dominios.length
+                return (
+                  <li key={registro.id}>
+                    <Link
+                      to={`/sf36/${registro.id}`}
+                      className="card flex flex-wrap items-center justify-between gap-3 p-4 transition hover:border-primary/40"
+                    >
+                      <div>
+                        <p className="font-medium">{formatarDataCurta(registro.data)}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          Pontuação geral: {formatarNumero(pontuacaoGeral, 0)}/100
+                        </p>
+                      </div>
+                      <Badge variant={classificarPontuacaoSF36(pontuacaoGeral)}>
+                        {formatarNumero(pontuacaoGeral, 0)}
+                      </Badge>
                     </Link>
                   </li>
                 )
