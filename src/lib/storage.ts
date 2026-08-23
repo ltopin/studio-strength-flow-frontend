@@ -1,116 +1,119 @@
 import type { Avaliacao, Cliente, ConfigMovimentos } from "@/types/dominio"
-import { AVALIACOES_MOCK, CLIENTES_MOCK, CONFIG_PADRAO } from "@/lib/mockData"
 
 /**
- * Persistência local do protótipo. Todo o acesso a localStorage do app passa
- * por este módulo — componentes React nunca leem/escrevem localStorage direto.
+ * Cliente HTTP para a API do backend (repositório studio-strength-flow-backend).
+ * Componentes React nunca chamam `fetch` diretamente — tudo passa por aqui.
  */
 
-const CHAVE_DADOS = "dinamometria:dados"
-const CHAVE_SESSAO = "dinamometria:sessao"
+const API_BASE_URL = import.meta.env.VITE_API_URL as string
 
-interface EstadoPersistido {
-  clientes: Cliente[]
-  avaliacoes: Avaliacao[]
-  config: ConfigMovimentos
-}
+const CHAVE_SESSAO = "dinamometria:sessao"
 
 export type Sessao = { perfil: "barbara" } | { perfil: "aluna"; clienteId: string }
 
-function estadoInicial(): EstadoPersistido {
-  return {
-    clientes: CLIENTES_MOCK,
-    avaliacoes: AVALIACOES_MOCK,
-    config: CONFIG_PADRAO,
-  }
+/**
+ * Valores de fallback (braço de alavanca em m, coeficiente 1RM) usados só até o
+ * backend responder `/api/config`. Para os 12 movimentos novos são estimativas
+ * de partida — devem ser calibrados na tela de Configurações.
+ */
+const CONFIG_PADRAO: ConfigMovimentos = {
+  kneeExt: { bracoAlavanca: 0.4, coeficiente1RM: 0.8 },
+  kneeFlex: { bracoAlavanca: 0.4, coeficiente1RM: 0.81 },
+  hipAbd: { bracoAlavanca: 0.5, coeficiente1RM: 0.84 },
+  hipIR: { bracoAlavanca: 0.3, coeficiente1RM: 0.85 },
+  hipER: { bracoAlavanca: 0.3, coeficiente1RM: 0.85 },
+  hipFlex: { bracoAlavanca: 0.4, coeficiente1RM: 0.83 },
+  hipExt: { bracoAlavanca: 0.4, coeficiente1RM: 0.85 },
+  shoulderIR: { bracoAlavanca: 0.25, coeficiente1RM: 0.87 },
+  shoulderER: { bracoAlavanca: 0.25, coeficiente1RM: 0.91 },
+  shoulderAbd: { bracoAlavanca: 0.3, coeficiente1RM: 0.86 },
+  shoulderFlex: { bracoAlavanca: 0.3, coeficiente1RM: 0.86 },
+  elbowFlex: { bracoAlavanca: 0.25, coeficiente1RM: 0.88 },
+  elbowExt: { bracoAlavanca: 0.25, coeficiente1RM: 0.88 },
+  wristFlex: { bracoAlavanca: 0.1, coeficiente1RM: 0.9 },
+  wristExt: { bracoAlavanca: 0.1, coeficiente1RM: 0.9 },
+  ankleDF: { bracoAlavanca: 0.15, coeficiente1RM: 0.89 },
+  ankleEv: { bracoAlavanca: 0.15, coeficiente1RM: 0.89 },
 }
 
-function lerEstado(): EstadoPersistido {
-  const bruto = localStorage.getItem(CHAVE_DADOS)
-  if (!bruto) {
-    const inicial = estadoInicial()
-    salvarEstado(inicial)
-    return inicial
-  }
-  return JSON.parse(bruto) as EstadoPersistido
+async function extrairMensagemErro(resposta: Response): Promise<string> {
+  const corpo = await resposta.json().catch(() => null)
+  const mensagem = corpo?.erro ?? corpo?.mensagem ?? corpo?.message ?? corpo?.error
+  return typeof mensagem === "string" ? mensagem : `Falha na requisição (${resposta.status})`
 }
 
-function salvarEstado(estado: EstadoPersistido): void {
-  localStorage.setItem(CHAVE_DADOS, JSON.stringify(estado))
+async function apiFetch<T>(caminho: string, init?: RequestInit): Promise<T> {
+  const resposta = await fetch(`${API_BASE_URL}${caminho}`, {
+    ...init,
+    headers: { "Content-Type": "application/json", ...init?.headers },
+  })
+  if (!resposta.ok) throw new Error(await extrairMensagemErro(resposta))
+  return (await resposta.json()) as T
+}
+
+async function apiFetchOuIndefinido<T>(caminho: string): Promise<T | undefined> {
+  const resposta = await fetch(`${API_BASE_URL}${caminho}`)
+  if (resposta.status === 404) return undefined
+  if (!resposta.ok) throw new Error(await extrairMensagemErro(resposta))
+  return (await resposta.json()) as T
 }
 
 // --- Clientes / alunas ---------------------------------------------------
 
-export function listarClientes(): Cliente[] {
-  return lerEstado().clientes
+export async function listarClientes(): Promise<Cliente[]> {
+  return apiFetch<Cliente[]>("/api/clientes")
 }
 
-export function obterCliente(clienteId: string): Cliente | undefined {
-  return lerEstado().clientes.find((c) => c.id === clienteId)
+export async function obterCliente(clienteId: string): Promise<Cliente | undefined> {
+  return apiFetchOuIndefinido<Cliente>(`/api/clientes/${clienteId}`)
 }
 
-export function criarCliente(dados: Omit<Cliente, "id">): Cliente {
-  const estado = lerEstado()
-  const slug = dados.nome
-    .toLowerCase()
-    .split(" ")[0]
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-  const id = `cli-${slug}-${Date.now().toString(36)}`
-  const cliente: Cliente = { id, ...dados }
-  estado.clientes = [...estado.clientes, cliente]
-  salvarEstado(estado)
-  return cliente
+export async function criarCliente(dados: Omit<Cliente, "id">): Promise<Cliente> {
+  return apiFetch<Cliente>("/api/clientes", { method: "POST", body: JSON.stringify(dados) })
 }
 
 // --- Avaliações ------------------------------------------------------------
 
-export function listarAvaliacoes(clienteId: string): Avaliacao[] {
-  return lerEstado()
-    .avaliacoes.filter((a) => a.clienteId === clienteId)
-    .sort((a, b) => b.data.localeCompare(a.data))
+export async function listarAvaliacoes(clienteId: string): Promise<Avaliacao[]> {
+  const avaliacoes = await apiFetch<Avaliacao[]>(`/api/clientes/${clienteId}/avaliacoes`)
+  return [...avaliacoes].sort((a, b) => b.data.localeCompare(a.data))
 }
 
-export function obterAvaliacao(avaliacaoId: string): Avaliacao | undefined {
-  return lerEstado().avaliacoes.find((a) => a.id === avaliacaoId)
+export async function obterAvaliacao(avaliacaoId: string): Promise<Avaliacao | undefined> {
+  return apiFetchOuIndefinido<Avaliacao>(`/api/avaliacoes/${avaliacaoId}`)
 }
 
-export function obterUltimaAvaliacao(clienteId: string): Avaliacao | undefined {
-  return listarAvaliacoes(clienteId)[0]
+export async function obterUltimaAvaliacao(clienteId: string): Promise<Avaliacao | undefined> {
+  const avaliacoes = await listarAvaliacoes(clienteId)
+  return avaliacoes[0]
 }
 
-export function criarAvaliacao(dados: Omit<Avaliacao, "id">): Avaliacao {
-  const estado = lerEstado()
-  const id = `ava-${dados.clienteId.replace("cli-", "")}-${Date.now().toString(36)}`
-  const avaliacao: Avaliacao = { id, ...dados }
-  estado.avaliacoes = [...estado.avaliacoes, avaliacao]
-  salvarEstado(estado)
-  return avaliacao
+export async function criarAvaliacao(dados: Omit<Avaliacao, "id">): Promise<Avaliacao> {
+  return apiFetch<Avaliacao>("/api/avaliacoes", { method: "POST", body: JSON.stringify(dados) })
 }
 
 // --- Configurações -----------------------------------------------------
 
-export function obterConfig(): ConfigMovimentos {
-  return lerEstado().config
+export async function obterConfig(): Promise<ConfigMovimentos> {
+  return apiFetch<ConfigMovimentos>("/api/config")
 }
 
-export function salvarConfig(config: ConfigMovimentos): void {
-  const estado = lerEstado()
-  estado.config = config
-  salvarEstado(estado)
+export async function salvarConfig(config: ConfigMovimentos): Promise<void> {
+  await apiFetch<ConfigMovimentos>("/api/config", { method: "PUT", body: JSON.stringify(config) })
 }
 
 export function obterConfigPadrao(): ConfigMovimentos {
   return CONFIG_PADRAO
 }
 
-export function restaurarDadosExemplo(): void {
-  salvarEstado(estadoInicial())
+export async function restaurarDadosExemplo(): Promise<void> {
+  await apiFetch<unknown>("/api/restaurar-dados-exemplo", { method: "POST" })
 }
 
 // --- Sessão mock -----------------------------------------------------------
 // Mock de autenticação: apenas guarda qual perfil foi selecionado, sem senha
 // nem validação de credenciais. Não deve ser usado como referência de auth real.
+// Continua em localStorage — não faz parte da integração com o backend.
 
 export function obterSessao(): Sessao | null {
   const bruto = localStorage.getItem(CHAVE_SESSAO)

@@ -1,8 +1,25 @@
-export type Movimento = "kneeExt" | "kneeFlex" | "hipAbd" | "shoulderIR" | "shoulderER"
+export type Movimento =
+  | "kneeExt"
+  | "kneeFlex"
+  | "hipAbd"
+  | "shoulderIR"
+  | "shoulderER"
+  | "shoulderAbd"
+  | "shoulderFlex"
+  | "elbowFlex"
+  | "elbowExt"
+  | "wristFlex"
+  | "wristExt"
+  | "hipIR"
+  | "hipER"
+  | "hipFlex"
+  | "hipExt"
+  | "ankleDF"
+  | "ankleEv"
 
 export type Lado = "D" | "E"
 
-export type RegiaoCorporal = "Joelho" | "Quadril" | "Ombro"
+export type RegiaoCorporal = "Joelho" | "Quadril" | "Ombro" | "Cotovelo" | "Punho" | "Tornozelo"
 
 export interface MovimentoInfo {
   id: Movimento
@@ -10,12 +27,25 @@ export interface MovimentoInfo {
   regiao: RegiaoCorporal
 }
 
+/** 17 grupos do protocolo padronizado de Morin et al. (2023). */
 export const MOVIMENTOS: readonly MovimentoInfo[] = [
-  { id: "kneeExt", nome: "Extensão de joelho", regiao: "Joelho" },
-  { id: "kneeFlex", nome: "Flexão de joelho", regiao: "Joelho" },
-  { id: "hipAbd", nome: "Abdução de quadril", regiao: "Quadril" },
+  { id: "shoulderAbd", nome: "Abdução de ombro", regiao: "Ombro" },
   { id: "shoulderIR", nome: "Rotação interna de ombro", regiao: "Ombro" },
   { id: "shoulderER", nome: "Rotação externa de ombro", regiao: "Ombro" },
+  { id: "shoulderFlex", nome: "Flexão de ombro", regiao: "Ombro" },
+  { id: "elbowFlex", nome: "Flexão de cotovelo", regiao: "Cotovelo" },
+  { id: "elbowExt", nome: "Extensão de cotovelo", regiao: "Cotovelo" },
+  { id: "wristFlex", nome: "Flexão de punho", regiao: "Punho" },
+  { id: "wristExt", nome: "Extensão de punho", regiao: "Punho" },
+  { id: "hipAbd", nome: "Abdução de quadril", regiao: "Quadril" },
+  { id: "hipIR", nome: "Rotação interna de quadril", regiao: "Quadril" },
+  { id: "hipER", nome: "Rotação externa de quadril", regiao: "Quadril" },
+  { id: "hipFlex", nome: "Flexão de quadril", regiao: "Quadril" },
+  { id: "hipExt", nome: "Extensão de quadril", regiao: "Quadril" },
+  { id: "kneeFlex", nome: "Flexão de joelho", regiao: "Joelho" },
+  { id: "kneeExt", nome: "Extensão de joelho", regiao: "Joelho" },
+  { id: "ankleDF", nome: "Dorsiflexão de tornozelo", regiao: "Tornozelo" },
+  { id: "ankleEv", nome: "Eversão de tornozelo", regiao: "Tornozelo" },
 ] as const
 
 export function obterInfoMovimento(movimento: Movimento): MovimentoInfo {

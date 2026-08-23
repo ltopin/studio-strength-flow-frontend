@@ -10,18 +10,35 @@ interface RegiaoMuscular {
 }
 
 /**
- * react-body-highlighter só tem um polígono por músculo por vista — `abductors`
- * (usado para abdução de quadril) só existe na vista anterior da biblioteca,
- * não na posterior. Se um movimento futuro precisar reusar um músculo já
- * mapeado aqui, a técnica de frequência abaixo para de funcionar (a frequência
- * dos dois movimentos somaria no mesmo músculo).
+ * react-body-highlighter só tem ~20 músculos e 1 polígono por músculo (a
+ * frequência soma por chave de músculo, ignorando vista). Ela não cobre
+ * cotovelo, punho, rotadores/flexores/extensores de quadril nem tornozelo
+ * especificamente, então vários dos 17 movimentos do protocolo dividem o
+ * mesmo polígono (ex.: hipIR/hipAbd → abductors; hipER/hipExt → gluteal;
+ * wristFlex/wristExt → forearm; ankleDF → calves, ankleEv → left-soleus como
+ * aproximações — a lib não tem tibial anterior nem fibulares). Quando isso
+ * acontece, `DiagramaCorporal` só manda para o `data` do músculo o resultado
+ * de classificação mais alta (ver `maisRelevantePorMusculo` abaixo); os
+ * demais continuam aparecendo com o badge real na lista abaixo do corpo.
  */
 const REGIAO_POR_MOVIMENTO: Record<Movimento, RegiaoMuscular> = {
   kneeExt: { musculo: "quadriceps", vista: "anterior" },
   kneeFlex: { musculo: "hamstring", vista: "posterior" },
   hipAbd: { musculo: "abductors", vista: "anterior" },
+  hipIR: { musculo: "abductors", vista: "anterior" },
+  hipER: { musculo: "gluteal", vista: "posterior" },
+  hipFlex: { musculo: "quadriceps", vista: "anterior" },
+  hipExt: { musculo: "gluteal", vista: "posterior" },
   shoulderIR: { musculo: "front-deltoids", vista: "anterior" },
   shoulderER: { musculo: "back-deltoids", vista: "posterior" },
+  shoulderAbd: { musculo: "front-deltoids", vista: "anterior" },
+  shoulderFlex: { musculo: "chest", vista: "anterior" },
+  elbowFlex: { musculo: "biceps", vista: "anterior" },
+  elbowExt: { musculo: "triceps", vista: "posterior" },
+  wristFlex: { musculo: "forearm", vista: "anterior" },
+  wristExt: { musculo: "forearm", vista: "posterior" },
+  ankleDF: { musculo: "calves", vista: "anterior" },
+  ankleEv: { musculo: "left-soleus", vista: "posterior" },
 }
 
 /** Índice (1-based) de `CORES_POR_TIER` — não é frequência de uso real. */
@@ -43,12 +60,36 @@ interface DiagramaCorporalProps {
   resultados: ResultadoMovimento[]
 }
 
+/**
+ * Quando dois movimentos caem no mesmo músculo da lib (ver comentário acima de
+ * REGIAO_POR_MOVIMENTO), só o de classificação de assimetria mais alta pinta o
+ * polígono — evita que a soma de frequência da lib misture os dois resultados.
+ */
+function selecionarResultadoPorMusculo(resultados: ResultadoMovimento[]): Set<Movimento> {
+  const maisRelevantePorMusculo = new Map<Muscle, ResultadoMovimento>()
+
+  for (const resultado of resultados) {
+    const { musculo } = REGIAO_POR_MOVIMENTO[resultado.movimento]
+    const atual = maisRelevantePorMusculo.get(musculo)
+    const superaAtual =
+      !atual || FREQUENCIA_POR_CLASSIFICACAO[resultado.classificacao] > FREQUENCIA_POR_CLASSIFICACAO[atual.classificacao]
+
+    if (superaAtual) maisRelevantePorMusculo.set(musculo, resultado)
+  }
+
+  return new Set([...maisRelevantePorMusculo.values()].map((resultado) => resultado.movimento))
+}
+
 export function DiagramaCorporal({ resultados }: DiagramaCorporalProps) {
-  const data: IExerciseData[] = resultados.map((resultado) => ({
-    name: obterInfoMovimento(resultado.movimento).nome,
-    muscles: [REGIAO_POR_MOVIMENTO[resultado.movimento].musculo],
-    frequency: FREQUENCIA_POR_CLASSIFICACAO[resultado.classificacao],
-  }))
+  const movimentosSelecionados = selecionarResultadoPorMusculo(resultados)
+
+  const data: IExerciseData[] = resultados
+    .filter((resultado) => movimentosSelecionados.has(resultado.movimento))
+    .map((resultado) => ({
+      name: obterInfoMovimento(resultado.movimento).nome,
+      muscles: [REGIAO_POR_MOVIMENTO[resultado.movimento].musculo],
+      frequency: FREQUENCIA_POR_CLASSIFICACAO[resultado.classificacao],
+    }))
 
   return (
     <section className="card p-5">

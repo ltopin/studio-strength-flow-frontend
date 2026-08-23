@@ -23,7 +23,7 @@ function hojeIso(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-const REGIOES: RegiaoCorporal[] = ["Joelho", "Quadril", "Ombro"]
+const REGIOES: RegiaoCorporal[] = ["Ombro", "Cotovelo", "Punho", "Quadril", "Joelho", "Tornozelo"]
 
 export function NovaAvaliacao() {
   const { clienteId } = useParams<{ clienteId: string }>()

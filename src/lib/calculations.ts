@@ -155,6 +155,50 @@ export function calcularRelacoesMusculares(medicoes: Medicao[]): RelacaoMuscular
         encontrarForca(medicoes, "shoulderIR", "E")
       ),
     },
+    {
+      nome: "Flexão/Extensão cotovelo",
+      valorD: calcularRelacaoMuscular(
+        encontrarForca(medicoes, "elbowFlex", "D"),
+        encontrarForca(medicoes, "elbowExt", "D")
+      ),
+      valorE: calcularRelacaoMuscular(
+        encontrarForca(medicoes, "elbowFlex", "E"),
+        encontrarForca(medicoes, "elbowExt", "E")
+      ),
+    },
+    {
+      nome: "Flexão/Extensão punho",
+      valorD: calcularRelacaoMuscular(
+        encontrarForca(medicoes, "wristFlex", "D"),
+        encontrarForca(medicoes, "wristExt", "D")
+      ),
+      valorE: calcularRelacaoMuscular(
+        encontrarForca(medicoes, "wristFlex", "E"),
+        encontrarForca(medicoes, "wristExt", "E")
+      ),
+    },
+    {
+      nome: "Flexão/Extensão quadril",
+      valorD: calcularRelacaoMuscular(
+        encontrarForca(medicoes, "hipFlex", "D"),
+        encontrarForca(medicoes, "hipExt", "D")
+      ),
+      valorE: calcularRelacaoMuscular(
+        encontrarForca(medicoes, "hipFlex", "E"),
+        encontrarForca(medicoes, "hipExt", "E")
+      ),
+    },
+    {
+      nome: "Rot. ext/int quadril",
+      valorD: calcularRelacaoMuscular(
+        encontrarForca(medicoes, "hipER", "D"),
+        encontrarForca(medicoes, "hipIR", "D")
+      ),
+      valorE: calcularRelacaoMuscular(
+        encontrarForca(medicoes, "hipER", "E"),
+        encontrarForca(medicoes, "hipIR", "E")
+      ),
+    },
   ]
 }
 
