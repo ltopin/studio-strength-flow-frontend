@@ -157,3 +157,13 @@ export interface RegistroDor {
   data: string
   pontos: PontoDor[]
 }
+
+export interface RegistroAnamnese {
+  id: string
+  clienteId: string
+  data: string
+  queixaPrincipal?: string
+  historicoSaude?: string
+  objetivos?: string
+  observacoes?: string
+}

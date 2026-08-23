@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, ClipboardPlus, Stethoscope, TrendingUp } from "lucide-react"
+import { ArrowLeft, ClipboardList, ClipboardPlus, Stethoscope, TrendingUp } from "lucide-react"
 
 import { Cabecalho } from "@/components/shared/Cabecalho"
 import { BadgeAssimetria } from "@/components/shared/BadgeAssimetria"
@@ -10,7 +10,13 @@ import { EvolucaoAtendimento } from "@/components/shared/EvolucaoAtendimento"
 import { GraficoEvolucao } from "@/components/shared/GraficoEvolucao"
 import { calcularResumoAvaliacao, classificarEva } from "@/lib/calculations"
 import { formatarDataCurta, formatarNumero } from "@/lib/format"
-import { useAvaliacoesDoCliente, useCliente, useConfig, useRegistrosDorDoCliente } from "@/lib/queries"
+import {
+  useAnamnesesDoCliente,
+  useAvaliacoesDoCliente,
+  useCliente,
+  useConfig,
+  useRegistrosDorDoCliente,
+} from "@/lib/queries"
 import { NOMES_REGIAO_DOR, obterInfoMovimento } from "@/types/dominio"
 
 export function PerfilAluna() {
@@ -21,6 +27,7 @@ export function PerfilAluna() {
   const avaliacoesQuery = useAvaliacoesDoCliente(clienteId)
   const configQuery = useConfig()
   const registrosDorQuery = useRegistrosDorDoCliente(clienteId)
+  const anamnesesQuery = useAnamnesesDoCliente(clienteId)
 
   useEffect(() => {
     if (clienteQuery.isSuccess && !clienteQuery.data) navigate("/painel", { replace: true })
@@ -57,6 +64,7 @@ export function PerfilAluna() {
   const avaliacoesCronologicas = [...avaliacoes].reverse()
   const resumoMaisRecente = avaliacoes[0] ? calcularResumoAvaliacao(avaliacoes[0].medicoes, config) : null
   const registrosDor = registrosDorQuery.data ?? []
+  const anamneses = anamnesesQuery.data ?? []
 
   return (
     <>
@@ -75,6 +83,10 @@ export function PerfilAluna() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Link to={`/alunas/${cliente.id}/anamnese/nova`} className="btn-outline">
+              <ClipboardList className="h-4 w-4" />
+              Anamnese
+            </Link>
             <Link to={`/alunas/${cliente.id}/dor/nova`} className="btn-outline">
               <Stethoscope className="h-4 w-4" />
               Dor
@@ -138,6 +150,35 @@ export function PerfilAluna() {
                   </li>
                 )
               })}
+            </ul>
+          )}
+        </section>
+
+        <section className="mt-6">
+          <h2 className="text-sm font-semibold tracking-wider text-muted-foreground uppercase">Histórico de anamnese</h2>
+          {anamnesesQuery.isLoading ? (
+            <p className="mt-4 text-sm text-muted-foreground">Carregando...</p>
+          ) : anamnesesQuery.isError ? (
+            <p className="mt-4 text-sm text-muted-foreground">Não foi possível carregar o histórico de anamnese.</p>
+          ) : anamneses.length === 0 ? (
+            <p className="mt-4 text-sm text-muted-foreground">Ainda não há registros de anamnese para esta aluna.</p>
+          ) : (
+            <ul className="mt-4 space-y-3">
+              {anamneses.map((registro) => (
+                <li key={registro.id}>
+                  <Link
+                    to={`/anamnese/${registro.id}`}
+                    className="card flex flex-wrap items-center justify-between gap-3 p-4 transition hover:border-primary/40"
+                  >
+                    <div>
+                      <p className="font-medium">{formatarDataCurta(registro.data)}</p>
+                      {registro.queixaPrincipal && (
+                        <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{registro.queixaPrincipal}</p>
+                      )}
+                    </div>
+                  </Link>
+                </li>
+              ))}
             </ul>
           )}
         </section>

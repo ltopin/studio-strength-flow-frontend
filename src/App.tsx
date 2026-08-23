@@ -11,6 +11,8 @@ import { ResultadoAvaliacao } from "@/pages/barbara/ResultadoAvaliacao"
 import { PerfilAluna } from "@/pages/barbara/PerfilAluna"
 import { RegistrarDor } from "@/pages/barbara/RegistrarDor"
 import { DetalheRegistroDor } from "@/pages/barbara/DetalheRegistroDor"
+import { RegistrarAnamnese } from "@/pages/barbara/RegistrarAnamnese"
+import { DetalheAnamnese } from "@/pages/barbara/DetalheAnamnese"
 import { Configuracoes } from "@/pages/barbara/Configuracoes"
 import { DashboardAluna } from "@/pages/aluna/DashboardAluna"
 
@@ -81,6 +83,22 @@ export function App() {
             element={
               <RequerBarbara>
                 <DetalheRegistroDor />
+              </RequerBarbara>
+            }
+          />
+          <Route
+            path="/alunas/:clienteId/anamnese/nova"
+            element={
+              <RequerBarbara>
+                <RegistrarAnamnese />
+              </RequerBarbara>
+            }
+          />
+          <Route
+            path="/anamnese/:registroId"
+            element={
+              <RequerBarbara>
+                <DetalheAnamnese />
               </RequerBarbara>
             }
           />

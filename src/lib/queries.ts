@@ -1,15 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import {
+  criarAnamnese,
   criarAvaliacao,
   criarCliente,
   criarRegistroDor,
   criarRegistroEvolucao,
+  listarAnamneses,
   listarAvaliacoes,
   listarClientes,
   listarProtocolos,
   listarRegistrosDor,
   listarRegistrosEvolucao,
+  obterAnamnese,
   obterAvaliacao,
   obterCliente,
   obterConfig,
@@ -33,6 +36,8 @@ export const chavesQuery = {
   registrosEvolucaoDoCliente: (clienteId: string) => ["clientes", clienteId, "evolucao"] as const,
   registrosDorDoCliente: (clienteId: string) => ["clientes", clienteId, "dor"] as const,
   registroDor: (id: string) => ["registros-dor", id] as const,
+  anamnesesDoCliente: (clienteId: string) => ["clientes", clienteId, "anamneses"] as const,
+  anamnese: (id: string) => ["anamneses", id] as const,
 }
 
 export function useClientes() {
@@ -104,6 +109,22 @@ export function useRegistroDor(registroId: string | undefined) {
   })
 }
 
+export function useAnamnesesDoCliente(clienteId: string | undefined) {
+  return useQuery({
+    queryKey: chavesQuery.anamnesesDoCliente(clienteId ?? ""),
+    queryFn: () => listarAnamneses(clienteId!),
+    enabled: Boolean(clienteId),
+  })
+}
+
+export function useAnamnese(registroId: string | undefined) {
+  return useQuery({
+    queryKey: chavesQuery.anamnese(registroId ?? ""),
+    queryFn: () => obterAnamnese(registroId!),
+    enabled: Boolean(registroId),
+  })
+}
+
 export function useCriarCliente() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -141,6 +162,16 @@ export function useCriarRegistroDor() {
     mutationFn: criarRegistroDor,
     onSuccess: (registro) => {
       queryClient.invalidateQueries({ queryKey: chavesQuery.registrosDorDoCliente(registro.clienteId) })
+    },
+  })
+}
+
+export function useCriarAnamnese() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: criarAnamnese,
+    onSuccess: (registro) => {
+      queryClient.invalidateQueries({ queryKey: chavesQuery.anamnesesDoCliente(registro.clienteId) })
     },
   })
 }
